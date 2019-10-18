@@ -1,0 +1,14 @@
+zfsprep_zap_disks: true
+zfsprep_boot_pool: bpool
+zfsprep_root_pool: rpool
+zfsprep_efi: true
+zfsprep_hostname:
+  short: arc
+  long: arc.subly.me
+zfsprep_root_disks:
+  - sdb
+  - sdc
+zfsprep_boot_pool_type: "mirror"
+zfsprep_root_pool_type: "mirror"
+zfsprep_legacy_device_nodes: false
+zfsprep_timezone: "America/Detroit"

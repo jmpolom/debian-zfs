@@ -1,0 +1,82 @@
+{
+  "variables": {
+    "output_dir": "output-ubuntu-zfs-efi"
+  },
+  "provisioners": [
+    {
+      "type": "ansible-local",
+      "playbook_dir": "ansible",
+      "playbook_file": "ansible/playbook.yml",
+      "inventory_file": "ansible/inventory",
+      "command": "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 DEFAULT_STDOUT_CALLBACK=yaml ansible-playbook",
+      "extra_arguments": [
+          "-v",
+          "-e", "zfsprep_efi=true"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+          "false #pause so we can troubleshoot build"
+      ]
+    }
+  ],
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "output_directory": "{{ user `output_dir` }}",
+      "boot_command": [
+        "<wait>e<wait><down><down><end><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><wait>",
+        "systemd.unit=multi-user.target<f10>",
+        "<wait10><wait10><wait10><wait>sudo -i<enter><wait>",
+        "<wait>passwd<enter>vagrant<enter>vagrant<enter><wait>",
+        "apt-get update",
+        "apt-get install software-properties-common",
+        "apt-get update",
+        "add-apt-repository contrib",
+        "apt-get update",
+        "apt-get install -y openssh-server ansible",
+        "echo PermitRootLogin yes >> /etc/ssh/sshd_config",
+        "service ssh restart<enter>"
+      ],
+      "boot_wait": "5s",
+      "disk_size": 8192,
+      "guest_os_type": "Debian_64",
+      "iso_interface": "sata",
+      "hard_drive_interface": "sata",
+      "sata_port_count": "5",
+      "headless": true,
+      "http_directory": "http",
+      "iso_urls": [
+        "https://cdimage.debian.org/cdimage/weekly-live-builds/amd64/iso-hybrid/debian-live-testing-amd64-xfce.iso"
+      ],
+      "iso_checksum_type": "sha256",
+      "iso_checksum": "4c1591e3725cb38f31a14b49c6935c358d102f82e9ad31d2ac36c649bf6bbcd7",
+      "ssh_username": "root",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "guest_additions_path": "VBoxGuestAdditions.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "packer-debian-zfs-efi-x86_64",
+      "vboxmanage": [
+        [ "modifyvm", "{{.Name}}", "--firmware", "efi" ],
+        [ "modifyvm", "{{.Name}}", "--memory", "2048" ],
+        [ "modifyvm", "{{.Name}}", "--cpus", "2" ],
+        [ "modifyvm", "{{.Name}}", "--rtcuseutc", "on" ],
+        [ "createhd", "--format", "VDI", "--filename", "{{ user `output_dir` }}/disk2.vdi", "--size", "8192" ],
+        [ "createhd", "--format", "VDI", "--filename", "{{ user `output_dir` }}/disk3.vdi", "--size", "8192" ],
+        [ "createhd", "--format", "VDI", "--filename", "{{ user `output_dir` }}/disk4.vdi", "--size", "8192" ],
+        [ "storageattach", "{{.Name}}", "--storagectl", "SATA Controller", "--port", "2", "--type", "hdd", "--medium", "{{ user `output_dir` }}/disk2.vdi" ],
+        [ "storageattach", "{{.Name}}", "--storagectl", "SATA Controller", "--port", "3", "--type", "hdd", "--medium", "{{ user `output_dir` }}/disk3.vdi" ],
+        [ "storageattach", "{{.Name}}", "--storagectl", "SATA Controller", "--port", "4", "--type", "hdd", "--medium", "{{ user `output_dir` }}/disk4.vdi" ]
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "builds/{{.Provider}}-ubuntu-zfs.box",
+      "type": "vagrant"
+    }
+  ]
+}
