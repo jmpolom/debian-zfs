@@ -1,9 +1,8 @@
 ---
-zfsprep_ubuntu_release: bionic
+zfsprep_debian_release: testing
 zfsprep_zap_disks: false
 zfsprep_efi: true
-zfsprep_netplan: true
-zfsprep_netplan_interface: "{{ (hostvars[inventory_hostname]['ansible_interfaces'] | difference(['lo'])).0 }}"
+zfsprep_network_interface: "{{ (hostvars[inventory_hostname]['ansible_interfaces'] | difference(['lo'])).0 }}"
 zfsprep_hostname:
   short: zfsprep
   long: zfsprep.local

@@ -1,5 +1,4 @@
-[Match]
-Name={{ zfsprep_netplan_interface }}
-
-[Network]
-DHCP=ipv4
+auto {{ zfsprep_network_interface }}
+allow-hotplug {{ zfsprep_network_interface }}
+iface {{ zfsprep_network_interface }} inet dhcp
+iface {{ zfsprep_network_interface }} inet6 auto

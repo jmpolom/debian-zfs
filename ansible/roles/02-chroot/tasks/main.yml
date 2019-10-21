@@ -28,14 +28,10 @@
     dest: /etc/mtab
     state: link
 
-- name: update apt cache
+- name: install dpkg-dev, kernel and headers
   apt:
     update_cache: yes
-
-- name: install our kernel
-  apt:
-    name: "{{ zfsprep_kernel_package }}"
-    install_recommends: no
+    name: dpkg-dev, "{{ zfsprep_kernel_package }}", "{{ zfsprep_headers_package }}"
     state: present
 
 - name: install zfs-initramfs
@@ -58,7 +54,7 @@
 - name: set up grub partitions for efi
   command: "mkdosfs -F32 -n EFI {{ item }}"
   with_items:
-    - "{{ zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>' + zfsprep_efi_part_append) | list  }}"
+    - "{{ zfsprep_efi_partition }}"
   when: zfsprep_efi|default(false)|bool == true
 
 - name: create efi mountpoint
@@ -71,7 +67,7 @@
   command: "blkid -s PARTUUID -o value {{ disk }}"
   register: efi_blkid
   vars:
-    disk: "{{ zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>' + zfsprep_efi_part_append) | list | first }}"
+    disk: "{{ zfsprep_efi_partition | first }}"
   when: zfsprep_efi|default(false)|bool == true
 
 - name: update fstab with efi partition
@@ -88,17 +84,17 @@
 - name: update fstab entry for boot volume
   mount:
     path: /boot
-    src: "{{ zfsprep_boot_pool}}/BOOT/ubuntu"
+    src: "{{ zfsprep_boot_pool }}/BOOT/debian"
     fstype: zfs
     opts: nodev,relatime,x-systemd.requires=zfs-import-bpool.service
     dump: 0
     passno: 0
     state: present
 
-- name: update fstab entries for select rpool volumes
+- name: update fstab entries for select root pool volumes
   mount:
     path: "{{ item }}"
-    src: "{{ zfsprep_root_pool}}{{ item }}"
+    src: "{{ zfsprep_root_pool }}{{ item }}"
     fstype: zfs
     opts: defaults
     dump: 0
@@ -114,7 +110,7 @@
   command: "blkid -s PARTUUID -o value {{ item }}"
   register: efi_backup_blkid
   with_items:
-    - "{{ (zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>' + zfsprep_efi_part_append) | list)[1:] }}"
+    - "{{ zfsprep_efi_partition[1:] }}"
   when: zfsprep_efi|default(false)|bool == true
 
 - name: update fstab with backup efi partitions
@@ -129,9 +125,9 @@
   when: zfsprep_efi|default(false)|bool == true
   loop: "{{ efi_backup_blkid.results }}"
 
-- name: install grub-efi-amd64
+- name: install grub-efi-amd64 and shim-signed
   apt:
-    name: grub-efi-amd64
+    name: ['grub-efi-amd64', 'shim-signed']
     state: present
   when: zfsprep_efi|default(false)|bool == true
 
@@ -139,32 +135,6 @@
   user:
     name: root
     password: "{{ zfsprep_root_password_hash }}"
-
-#- name: fix mount race condition
-#  command: "zfs set mountpoint=legacy {{ item }}"
-#  with_items:
-#    - "{{ zfsprep_boot_pool }}/BOOT/ubuntu"
-#    - "{{ zfsprep_root_pool }}/tmp"
-#    - "{{ zfsprep_root_pool }}/var/log"
-#    - "{{ zfsprep_root_pool }}/var/spool"
-#    - "{{ zfsprep_root_pool }}/var/tmp"
-
-#- name: update fstab entries for boot volume
-#  lineinfile:
-#    line: "{{ zfsprep_boot_pool}}/BOOT/ubuntu /boot zfs nodev,relatime,x-systemd.requires=zfs-import-bpool.service 0 0"
-#    path: /etc/fstab
-#    insertafter: EOF
-
-#- name: update fstab entries for select rpool volumes
-#  lineinfile:
-#    line: "{{ zfsprep_root_pool}}{{ item }} {{ item }} zfs defaults 0 0"
-#    path: /etc/fstab
-#    insertafter: EOF
-#  with_items:
-#    - /tmp
-#    - /var/log
-#    - /var/spool
-#    - /var/tmp
 
 - name: create swap zvol
   zfs:
@@ -181,7 +151,7 @@
   mount:
     backup: yes
     path: none
-    src: /dev/zvol/{{ zfsprep_root_pool }}/swap
+    src: "/dev/zvol/{{ zfsprep_root_pool }}/swap"
     fstype: swap
     opts: defaults
     passno: 0
@@ -228,7 +198,7 @@
   when: zfsprep_efi|default(false)|bool != true
 
 - name: install grub efi on primary disk
-  command: "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ubuntu --recheck --no-floppy"
+  command: "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck --no-floppy"
   when: zfsprep_efi|default(false)|bool == true
 
 - name: unmount boot efi partition
@@ -237,17 +207,58 @@
     state: unmounted
 
 - name: write grub boot sector
-  command: "dd if={{ zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>' + zfsprep_efi_part_append) | list | first }} of={{ item }}"
+  command: "dd if={{ zfsprep_efi_partition | first }} of={{ item }}"
   with_items:
-    - "{{ (zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>' + zfsprep_efi_part_append) | list)[1:] }}"
+    - "{{ zfsprep_efi_partition[1:] }}"
   when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
 
 - name: setup efi on secondary disks
-  command: "efibootmgr -c -g -d {{ item.0 }} -p 3 -L 'ubuntu-{{ item.1 }}' -l '\\EFI\\Ubuntu\\grubx64.efi'"
+  command: "efibootmgr -c -g -d {{ item.0 }} -p 3 -L 'debian-{{ item.1 }}' -l '\\EFI\\debian\\grubx64.efi'"
   with_together:
     - "{{ (zfsprep_root_device_list | map('regex_replace', '(.*)', '\\g<1>') | list)[1:] }}"
     - "{{ zfsprep_root_disks[1:] }}"
   when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
+
+- name: set mountpoint=legacy for boot pool
+  command: "zfs set mountpoint=legacy {{ zfsprep_boot_pool }}/BOOT/debian"
+
+- name: make zfs-list.cache directory
+  file:
+    path: /etc/zfs/zfs-list.cache
+    state: directory
+
+- name: create root pool list
+  file:
+    path: "/etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"
+    state: touch
+    mode: u+r,g+r,o+rw
+
+- name: enable zed.d
+  file:
+    src: /usr/lib/zfs-linux/zed.d/history_event-zfs-list-cacher.sh
+    dest: /etc/zfs/zed.d
+    state: link
+
+- name: run zed to update zfs list cache
+  shell: "nohup zed -F > /dev/null 2>&1 &"
+
+- name: change root pool zfs property to force cache update
+  command: "zfs set canmount=noauto {{ zfsprep_root_pool }}/ROOT/debian"
+
+- pause:
+    seconds: 45
+
+- name: get PID for zed so we can kill it
+  pids:
+    name: zed
+  register: zed_pid
+
+- name: kill zed
+  shell: "kill {{ item }}"
+  with_items: "{{ zed_pid.pids }}"
+
+- name: fix paths in zfs list cache for root pool
+  command: "sed -Ei \"s|/mnt/?|/|\" /etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"
 
 - name: mount boot efi partition
   command: mount /boot/efi
@@ -284,7 +295,7 @@
     name: firstboot.service
     enabled: yes
 
-- name: enable systemd-networkd service
-  systemd:
-    name: systemd-networkd
-    enabled: yes
+#- name: enable systemd-networkd service
+#  systemd:
+#    name: systemd-networkd
+#    enabled: yes

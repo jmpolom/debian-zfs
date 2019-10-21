@@ -45,7 +45,7 @@
 
 - name: create boot filesystem
   zfs:
-    name: "{{ zfsprep_boot_pool }}/BOOT/ubuntu"
+    name: "{{ zfsprep_boot_pool }}/BOOT/debian"
     state: present
     extra_zfs_properties:
       canmount: noauto
@@ -53,22 +53,22 @@
 
 - name: create root filesystem
   zfs:
-    name: "{{ zfsprep_root_pool }}/ROOT/ubuntu"
+    name: "{{ zfsprep_root_pool }}/ROOT/debian"
     state: present
     extra_zfs_properties:
       canmount: noauto
       mountpoint: /
 
-- name: manually mount rpool/ROOT/ubuntu before creating other mountpoints
-  command: "zfs mount {{ zfsprep_root_pool }}/ROOT/ubuntu"
+- name: manually mount rpool/ROOT/debian before creating other mountpoints
+  command: "zfs mount {{ zfsprep_root_pool }}/ROOT/debian"
 
 - name: create boot directory
   file:
     path: /mnt/boot
     state: directory
 
-- name: manually mount bpool/ROOT/ubuntu before creating other mountpoints
-  command: "mount -t zfs {{ zfsprep_boot_pool }}/BOOT/ubuntu /mnt/boot"
+- name: manually mount bpool/ROOT/debian before creating other mountpoints
+  command: "mount -t zfs {{ zfsprep_boot_pool }}/BOOT/debian /mnt/boot"
 
 - name: create rpool child filesystems
   zfs:
@@ -109,7 +109,7 @@
     mode: 01777
 
 - name: run debootstrap
-  command: "debootstrap {{ zfsprep_ubuntu_release }} /mnt"
+  command: "debootstrap {{ zfsprep_debian_release }} /mnt"
 
 - name: run zfs set devices=off for root pool
   command: "zfs set devices=off {{ zfsprep_root_pool }}"
@@ -122,7 +122,7 @@
 - name: write default network config in chroot
   template:
     src: network.j2
-    dest: "/mnt/etc/systemd/network/{{ zfsprep_netplan_interface }}.network"
+    dest: "/mnt/etc/network/interfaces.d/{{ zfsprep_network_interface }}"
 
 - name: write /etc/apt/sources.list in chroot
   template:
@@ -131,7 +131,7 @@
 
 - name: add hostname entries to /etc/hosts in chroot
   lineinfile:
-    line: "127.0.0.1 {{ zfsprep_hostname.short }} {{ zfsprep_hostname.long }}"
+    line: "127.0.1.1 {{ zfsprep_hostname.long }} {{ zfsprep_hostname.short }}"
     path: /mnt/etc/hosts
     state: present
     insertbefore: BOF

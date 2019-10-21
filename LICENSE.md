@@ -1,6 +1,6 @@
 BSD 2-Clause License
 
-Copyright (c) 2018, github.com/dyindude
+Copyright (c) 2018, github.com/jmpolom
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
