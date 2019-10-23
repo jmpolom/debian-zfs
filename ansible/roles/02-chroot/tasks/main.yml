@@ -2,6 +2,12 @@
 - debug:
     var: zfsprep_efi|default(false)|bool == true
 
+- name: ln -s /proc/self/mounts /etc/mtab
+  file:
+    src: /proc/self/mounts
+    dest: /etc/mtab
+    state: link
+
 - name: install locales
   locale_gen:
     name: "{{ item }}"
@@ -21,12 +27,6 @@
 
 - name: reconfigure tzdata package
   command: dpkg-reconfigure -f noninteractive tzdata
-
-- name: ln -s /proc/self/mounts /etc/mtab
-  file:
-    src: /proc/self/mounts
-    dest: /etc/mtab
-    state: link
 
 - name: install dpkg-dev, kernel and headers
   apt:
@@ -91,20 +91,20 @@
     passno: 0
     state: present
 
-- name: update fstab entries for select root pool volumes
-  mount:
-    path: "{{ item }}"
-    src: "{{ zfsprep_root_pool }}{{ item }}"
-    fstype: zfs
-    opts: defaults
-    dump: 0
-    passno: 0
-    state: present
-  with_items:
-    - /tmp
-    - /var/log
-    - /var/spool
-    - /var/tmp
+# - name: update fstab entries for select root pool volumes
+#   mount:
+#     path: "{{ item }}"
+#     src: "{{ zfsprep_root_pool }}{{ item }}"
+#     fstype: zfs
+#     opts: defaults
+#     dump: 0
+#     passno: 0
+#     state: present
+#   with_items:
+#     - /tmp
+#     - /var/log
+#     - /var/spool
+#     - /var/tmp
 
 - name: get backup efi partition uuid
   command: "blkid -s PARTUUID -o value {{ item }}"
@@ -245,8 +245,9 @@
 - name: change root pool zfs property to force cache update
   command: "zfs set canmount=noauto {{ zfsprep_root_pool }}/ROOT/debian"
 
-- pause:
-    seconds: 45
+- name: pause for 30 seconds to give zed time to write list cache
+  pause:
+    seconds: 30
 
 - name: get PID for zed so we can kill it
   pids:
