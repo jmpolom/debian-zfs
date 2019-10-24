@@ -250,8 +250,7 @@
     seconds: 30
 
 - name: get PID for zed so we can kill it
-  pids:
-    name: zed
+  command: "pgrep zed"
   register: zed_pid
 
 - name: kill zed
