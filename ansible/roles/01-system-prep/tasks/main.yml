@@ -1,7 +1,7 @@
 ---
 - name: ensure live system has necessary packages installed
   apt:
-    name: ['mdadm','debootstrap','gdisk','zfs-initramfs']
+    name: ['mdadm','debootstrap','gdisk','dpkg-dev','zfs-dkms']
     state: present
 
 - name: clear superblocks
