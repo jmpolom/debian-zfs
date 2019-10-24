@@ -79,16 +79,16 @@
   with_items:
     - "{{ zfsprep_root_volumes }}"
 
- - name: create mountpoints for rpool filesystems with legacy mountpoints
-   file:
-     path: "/mnt{{ item }}"
-     state: directory
-   with_items:
-     - /tmp
-     - /var
-     - /var/log
-     - /var/spool
-     - /var/tmp
+- name: create mountpoints for rpool filesystems with legacy mountpoints
+  file:
+    path: "/mnt{{ item }}"
+    state: directory
+  with_items:
+    - /tmp
+    - /var
+    - /var/log
+    - /var/spool
+    - /var/tmp
  
 # - name: mount rpool filesystems with legacy mountpoints
 #   command: "mount -t zfs {{ zfsprep_root_pool }}{{ item }} /mnt{{ item }}"
@@ -98,15 +98,15 @@
 #     - /var/spool
 #     - /var/tmp
  
- - name: chmod 01777 /mnt/var/tmp
-   file:
-     path: /mnt/var/tmp
-     mode: 01777
- 
- - name: chmod 01777 /mnt/tmp
-   file:
-     path: /mnt/tmp
-     mode: 01777
+- name: chmod 01777 /mnt/var/tmp
+  file:
+    path: /mnt/var/tmp
+    mode: 01777
+
+- name: chmod 01777 /mnt/tmp
+  file:
+    path: /mnt/tmp
+    mode: 01777
 
 - name: run debootstrap
   command: "debootstrap {{ zfsprep_debian_release }} /mnt"
