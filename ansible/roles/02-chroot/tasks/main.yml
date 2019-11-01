@@ -39,12 +39,12 @@
     update_cache: yes
     name: "{{ packages }}"
     state: present
-    vars:
-      packages:
-        - dpkg-dev
-        - "{{ zfsprep_kernel_package }}"
-        - "{{ zfsprep_headers_package }}"
-        - zfs-initramfs
+  vars:
+    packages:
+      - dpkg-dev
+      - "{{ zfsprep_kernel_package }}"
+      - "{{ zfsprep_headers_package }}"
+      - zfs-initramfs
 
 - name: install grub-pc
   apt:
