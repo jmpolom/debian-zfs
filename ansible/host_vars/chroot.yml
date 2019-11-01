@@ -1,5 +1,4 @@
 ---
-ansible_connection: chroot
 zfsprep_efi: true
 zfsprep_swap: true
 zfsprep_swap_opts:

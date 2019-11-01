@@ -1,6 +1,4 @@
 ---
-ansible_connection: local
-ansible_become: yes
 zfsprep_debian_release: testing
 zfsprep_zap_disks: false
 zfsprep_efi: true

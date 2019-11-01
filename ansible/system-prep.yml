@@ -1,4 +1,5 @@
 - hosts: localhost
+  connection: local
   tasks:
     - name: install software-properties-common
       apt:
