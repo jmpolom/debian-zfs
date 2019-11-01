@@ -37,13 +37,19 @@
 - name: install dpkg-dev, kernel and headers
   apt:
     update_cache: yes
-    name: dpkg-dev, {{ zfsprep_kernel_package }}, {{ zfsprep_headers_package }}
+    name: ['dpkg-dev',"{{ zfsprep_kernel_package }}","{{ zfsprep_headers_package }}",'zfs-initramfs']
     state: present
+#    vars:
+#      packages:
+#        - dpkg-dev
+#        - "{{ zfsprep_kernel_package }}"
+#        - "{{ zfsprep_headers_package }}"
+#        -  zfs-initramfs
 
-- name: install zfs-initramfs
-  apt:
-    name: zfs-initramfs
-    state: present
+#- name: install zfs-initramfs
+#  apt:
+#    name: zfs-initramfs
+#    state: present
 
 - name: install grub-pc
   apt:
