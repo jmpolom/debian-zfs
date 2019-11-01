@@ -262,7 +262,7 @@
 
 - name: kill zed
   shell: "kill {{ item }}"
-  with_items: "{{ zed_pid.pids }}"
+  with_items: "{{ zed_pid.stdout }}"
 
 - name: fix paths in zfs list cache for root pool
   command: "sed -Ei \"s|/mnt/?|/|\" /etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"

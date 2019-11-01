@@ -2,7 +2,6 @@
 - apt:
     name: software-properties-common
     state: present
-- command: add-apt-repository universe
 - apt:
     name: "{{ item }}"
     state: present
@@ -24,4 +23,3 @@
     regexp: '^(.*compress.*)$'
     replace: '#\1'
   with_items: "{{ zfsprep_logrotate_jobs.files }}"
-
