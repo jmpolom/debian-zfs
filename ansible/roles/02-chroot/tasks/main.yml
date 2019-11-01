@@ -8,6 +8,12 @@
     dest: /etc/mtab
     state: link
 
+- name: install locales package
+  apt:
+    update_cache: yes
+    name: locales
+    state: present
+
 - name: install locales
   locale_gen:
     name: "{{ item }}"
