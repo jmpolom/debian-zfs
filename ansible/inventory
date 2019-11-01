@@ -1,5 +1,5 @@
 [live]
-localhost ansible_connection=local ansible_become=yes
+localhost
 
 [chroot]
-/mnt ansible_connection=chroot
+/mnt

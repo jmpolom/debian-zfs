@@ -2,5 +2,5 @@
 packages:
   - gdisk
   - ansible
-  - vim
+  - neovim
   - gnupg2

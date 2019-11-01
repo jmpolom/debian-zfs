@@ -1,0 +1,29 @@
+---
+- name: ensure software-properties-common is installed
+  apt:
+    name: software-properties-common
+    state: present
+
+- name: install any additional packages needed for first boot
+  apt:
+    name: "{{ packages }}"
+    state: present
+
+- name: write nocompress to /etc/logrotate.conf
+  replace:
+    path: /etc/logrotate.conf
+    regexp: '^.*compress$'
+    replace: 'nocompress'
+
+- name: find files in /etc/logrotate.d
+  find:
+    paths: /etc/logrotate.d
+    file_type: file
+  register: zfsprep_logrotate_jobs
+
+- name: comment all compress from logrotate.conf
+  replace:
+    path: "{{ item.path }}"
+    regexp: '^(.*compress.*)$'
+    replace: '#\1'
+  with_items: "{{ zfsprep_logrotate_jobs.files }}"

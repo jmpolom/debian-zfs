@@ -1,0 +1,4 @@
+auto {{ zfsprep_network_interface }}
+allow-hotplug {{ zfsprep_network_interface }}
+iface {{ zfsprep_network_interface }} inet dhcp
+iface {{ zfsprep_network_interface }} inet6 auto
