@@ -1,13 +1,15 @@
 ---
-- apt:
+- name: ensure software-properties-common is installed
+  apt:
     name: software-properties-common
     state: present
-- apt:
+- name: install any additional packages needed for first boot
+  apt:
     name: "{{ item }}"
     state: present
   with_items:
     - "{{ packages }}"
-- name: explicitly write nocompress to /etc/logrotate.conf
+- name: write nocompress to /etc/logrotate.conf
   replace:
     path: /etc/logrotate.conf
     regexp: '^.*compress$'
