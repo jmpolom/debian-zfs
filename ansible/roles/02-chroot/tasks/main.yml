@@ -261,7 +261,7 @@
   register: zed_pid
 
 - name: kill zed
-  shell: "kill {{ zed_pid.stdout }}"
+  shell: "kill {{ zed_pid.stdout_lines }}"
 
 - name: fix paths in zfs list cache for root pool
   command: "sed -Ei \"s|/mnt/?|/|\" /etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"
