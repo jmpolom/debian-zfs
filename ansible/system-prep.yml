@@ -1,0 +1,12 @@
+- hosts: localhost
+  tasks:
+    - name: install software-properties-common
+      apt:
+    	update_cache: yes
+        name: software-properties-common
+    - name: add contrib repository
+      command: add-apt-repository contrib
+    - name: install zfs
+      apt:
+        update_cache: yes
+        name: zfs-initramfs
