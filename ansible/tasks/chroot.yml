@@ -241,13 +241,8 @@
   pause:
     seconds: 30
 
-- name: get zed PID
-  command: "pgrep zed"
-  register: zed_pid
-
 - name: kill zed
-  shell: "kill {{ zed_pid.stdout_lines[0] }}"
-  #with_items: "{{ zed_pid.stdout_lines }}"
+  command: pkill zed
 
 - name: fix paths in zfs list cache for root pool
   command: "sed -Ei \"s|/mnt/?|/|\" /etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"
