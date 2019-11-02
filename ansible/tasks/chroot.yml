@@ -34,7 +34,7 @@
 - name: reconfigure tzdata package
   command: dpkg-reconfigure -f noninteractive tzdata
 
-- name: install dpkg-dev, kernel and headers
+- name: install dpkg-dev, kernel, kernel headers, and zfs
   apt:
     update_cache: yes
     name: "{{ packages }}"
@@ -241,13 +241,13 @@
   pause:
     seconds: 30
 
-- name: get PID for zed so we can kill it
+- name: get zed PID
   command: "pgrep zed"
   register: zed_pid
 
 - name: kill zed
-  shell: "kill {{ item }}"
-  with_items: "{{ zed_pid.stdout_lines }}"
+  shell: "kill {{ zed_pid.stdout_lines[0] }}"
+  #with_items: "{{ zed_pid.stdout_lines }}"
 
 - name: fix paths in zfs list cache for root pool
   command: "sed -Ei \"s|/mnt/?|/|\" /etc/zfs/zfs-list.cache/{{ zfsprep_root_pool }}"
