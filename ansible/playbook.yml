@@ -1,5 +1,6 @@
 - hosts: live
   vars_files:
+    - host_vars/live.yml
     - vars.yml
   tasks:
     - name: import pre-chroot tasks
@@ -11,6 +12,7 @@
       raw: "apt-get update && apt-get -y install python"
 - hosts: chroot
   vars_files:
+    - host_vars/chroot.yml
     - vars.yml
   tasks:
     - name: import chroot tasks
