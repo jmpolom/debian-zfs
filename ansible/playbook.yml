@@ -1,6 +1,6 @@
 - hosts: live
   vars_files:
-    - vars/live.yml
+    - vars/pre-chroot.yml
     - playbook-vars.yml
   tasks:
     - name: pre-chroot tasks
