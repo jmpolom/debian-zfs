@@ -5,9 +5,10 @@ zfsprep_efi: true
 zfsprep_hostname:
   short: arc
   long: arc.subly.me
-zfsprep_root_disks:
-  - sda
-  - sdb
+#zfsprep_root_disks:
+zfsprep_target_disks:
+  - /dev/disk/by-id/changeme
+  - /dev/disk/by-id/changeme
 zfsprep_boot_pool_type: "mirror"
 zfsprep_root_pool_type: "mirror"
 zfsprep_legacy_device_nodes: false
