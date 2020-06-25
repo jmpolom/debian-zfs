@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    prefix: "/dev/disks/by-id/"
+    devices:
+      - ata-VENDOR_MODEL_SERIAL001
+      - ata-VENDOR_MODEL_SERIAL002
+  tasks:
+    - name: Show prefix
+      debug:
+        var: prefix
+
+    - name: Show devices
+      debug:
+        var: devices
+
+    - name: Add prefix to list elements
+      set_fact:
+        combined: "{{ [prefix] | product(devices) | map('join') | list }}"
+
+    - name: Show combined list
+      debug:
+        var: combined
+
+    - name: And back again... extract basenames
+      set_fact:
+        basenames: "{{ combined | map('basename') | list }}"
+
+    - name: Show basenames
+      debug:
+        var: basenames
+
+    - name: Append suffix to devices in list
+      set_fact:
+        appended: "{{ combined | product(['-part2']) | map('join') | list }}"
+
+    - name: Show appended list items
+      debug:
+        var: appended

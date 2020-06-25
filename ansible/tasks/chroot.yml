@@ -1,7 +1,4 @@
 ---
-- debug:
-    var: zfsprep_efi|default(false)|bool == true
-
 - name: ln -s /proc/self/mounts /etc/mtab
   file:
     src: /proc/self/mounts
@@ -46,36 +43,36 @@
       - "{{ zfsprep_headers_package }}"
       - zfs-initramfs
 
-- name: install grub-pc
-  apt:
-    name: grub-pc
-    state: present
-  when: zfsprep_efi|default(false)|bool != true
+#- name: install grub-pc
+#  apt:
+#    name: grub-pc
+#    state: present
+#  when: zfsprep_efi | default(false) | bool != true
 
 - name: install dosfstools
   apt:
     name: dosfstools
     state: present
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: set up grub partitions for efi
   command: "mkdosfs -F32 -n EFI {{ item }}"
   with_items:
     - "{{ zfsprep_efi_partition }}"
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: create efi mountpoint
   file:
     path: /boot/efi
     state: directory
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: get efi partition uuid
   command: "blkid -s PARTUUID -o value {{ disk }}"
   register: efi_blkid
   vars:
     disk: "{{ zfsprep_efi_partition | first }}"
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: update fstab with efi partition
   mount:
@@ -86,14 +83,14 @@
     dump: 0
     passno: 1
     state: mounted
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: get backup efi partition uuid
   command: "blkid -s PARTUUID -o value {{ item }}"
   register: efi_backup_blkid
   with_items:
     - "{{ zfsprep_efi_partition[1:] }}"
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: update fstab with backup efi partitions
   mount:
@@ -104,14 +101,14 @@
     dump: 0
     passno: 1
     state: present
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
   loop: "{{ efi_backup_blkid.results }}"
 
 - name: install grub-efi-amd64 and shim-signed
   apt:
     name: ['grub-efi-amd64', 'shim-signed']
     state: present
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: set root password
   user:
@@ -127,7 +124,8 @@
 
 - name: mkswap
   command: "mkswap -f /dev/zvol/{{ zfsprep_root_pool }}/swap"
-  when: zfsprep_swap|default(false)|bool == true
+#  when: zfsprep_swap|default(false)|bool == true
+  when: zfsprep_swap
 
 - name: write swap entry in fstab
   mount:
@@ -139,18 +137,21 @@
     passno: 0
     dump: 0
     state: present
-  when: zfsprep_swap|default(false)|bool == true
+#  when: zfsprep_swap | default(false) | bool == true
+  when: zfsprep_swap
 
 - name: swapon
   command: swapon -av
-  when: zfsprep_swap|default(false)|bool == true
+#  when: zfsprep_swap|default(false)|bool == true
+  when: zfsprep_swap
 
 - lineinfile:
     line: "RESUME=none"
     path: /etc/initramfs-tools/conf.d/resume
     create: yes
     state: present
-  when: zfsprep_swap|default(false)|bool == true
+#  when: zfsprep_swap|default(false)|bool == true
+  when: zfsprep_swap
 
 - name: update initramfs
   command: "update-initramfs -u -k all"
@@ -173,15 +174,15 @@
 - name: update grub
   command: update-grub
 
-- name: grub install
-  command: "grub-install {{ item }}"
-  with_items:
-    - "{{ zfsprep_root_device_list }}"
-  when: zfsprep_efi|default(false)|bool != true
+# - name: grub install
+#   command: "grub-install {{ item }}"
+#   with_items:
+#     - "{{ zfsprep_root_device_list }}"
+#   when: zfsprep_efi|default(false)|bool != true
 
 - name: install grub efi on primary disk
   command: "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck --no-floppy"
-  when: zfsprep_efi|default(false)|bool == true
+#  when: zfsprep_efi|default(false)|bool == true
 
 - name: unmount boot efi partition
   mount:
@@ -192,14 +193,18 @@
   command: "dd if={{ zfsprep_efi_partition | first }} of={{ item }}"
   with_items:
     - "{{ zfsprep_efi_partition[1:] }}"
-  when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
+#  when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
+  when: (zfsprep_target_devices | length > 1)
 
 - name: setup efi on secondary disks
   command: "efibootmgr -c -g -d {{ item.0 }} -p 3 -L 'debian-{{ item.1 }}' -l '\\EFI\\debian\\grubx64.efi'"
   with_together:
-    - "{{ (zfsprep_root_device_list | map('regex_replace', '^(.*)$', '\\1') | list)[1:] }}"
-    - "{{ zfsprep_root_disks[1:] }}"
-  when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
+#    - "{{ (zfsprep_root_device_list | map('regex_replace', '^(.*)$', '\\1') | list)[1:] }}"
+#    - "{{ zfsprep_root_disks[1:] }}"
+    - "{{ zfsprep_target_devices[1:] }}"
+    - "{{ zfsprep_target_devices_basenames[1:] }}"
+#  when: (zfsprep_efi|default(false)|bool == true) and (zfsprep_root_device_list | length > 1)
+  when: (zfsprep_target_devices | length > 1)
 
 - name: set mountpoint=legacy for boot pool
   command: "zfs set mountpoint=legacy {{ zfsprep_boot_pool }}/BOOT/debian"

@@ -7,26 +7,34 @@
 - name: clear superblocks
   command: "mdadm --zero-superblock --force {{ item }}"
   with_items:
-    - "{{ zfsprep_target_disks }}"
-  when: zfsprep_zap_disks | default(false) | bool == true
+#    - "{{ zfsprep_target_disks }}"
+    - "{{ zfsprep_target_devices }}"
+#  when: zfsprep_zap_disks | default(false) | bool == true
+  when: zfsprep_zap_devices
 
 - name: clear gpt tables
   command: "sgdisk --zap-all {{ item }}"
   with_items:
-    - "{{ zfsprep_target_disks }}"
-  when: zfsprep_zap_disks | default(false) | bool == true
+#    - "{{ zfsprep_target_disks }}"
+    - "{{ zfsprep_target_devices }}"
+#  when: zfsprep_zap_disks | default(false) | bool == true
+  when: zfsprep_zap_devices
 
 - name: set up root disk partitions
   command: "sgdisk {{ zfsprep_partition_flags }} {{ item }}"
   with_items:
 #    - "{{ zfsprep_root_device_list }}"
-    - "{{ zfsprep_target_disks }}"
+    - "{{ zfsprep_target_devices }}"
 
 - name: create boot zpool
-  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_boot_part_append) | list | join(' ') }}"
+#  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_boot_part_append) | list | join(' ') }}"
+#  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_devices | map('regex_replace', '^(.*)$', '\\1' + zfsprep_boot_part_append) | list | join(' ') }}"
+  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_devices | product(zfsprep_boot_part_append) | map('join') | list | join(' ') }}"
 
 - name: create root zpool
-  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_root_part_append) | list | join(' ') }}"
+#  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_root_part_append) | list | join(' ') }}"
+#  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_devices | map('regex_replace', '^(.*)$', '\\1' + zfsprep_root_part_append) | list | join(' ') }}"
+  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_devices | product(zfsprep_root_part_append) | map('join') | list | join(' ') }}"
 
 - name: create boot dataset
   zfs:

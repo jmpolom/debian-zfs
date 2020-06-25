@@ -1,6 +1,6 @@
 - hosts: live
   vars_files:
-    - vars/pre-chroot.yml
+    - vars/common.yml
     - playbook-vars.yml
   tasks:
     - name: pre-chroot tasks
@@ -12,7 +12,7 @@
       raw: "apt-get update && apt-get -y install python"
 - hosts: chroot
   vars_files:
-    - vars/chroot.yml
+    - vars/common.yml
     - playbook-vars.yml
   tasks:
     - name: chroot tasks
