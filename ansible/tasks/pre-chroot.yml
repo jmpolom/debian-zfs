@@ -29,12 +29,12 @@
 - name: create boot zpool
 #  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_boot_part_append) | list | join(' ') }}"
 #  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_devices | map('regex_replace', '^(.*)$', '\\1' + zfsprep_boot_part_append) | list | join(' ') }}"
-  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_devices | product(zfsprep_boot_part_append) | map('join') | list | join(' ') }}"
+  command: "zpool create {{ zfsprep_boot_pool_opts }} {{ zfsprep_boot_pool }} {{ zfsprep_boot_pool_type }} {{ zfsprep_target_devices | product([zfsprep_boot_part_append]) | map('join') | list | join(' ') }}"
 
 - name: create root zpool
 #  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_disks | map('regex_replace', '^(.*)$', '\\1' + zfsprep_root_part_append) | list | join(' ') }}"
 #  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_devices | map('regex_replace', '^(.*)$', '\\1' + zfsprep_root_part_append) | list | join(' ') }}"
-  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_devices | product(zfsprep_root_part_append) | map('join') | list | join(' ') }}"
+  command: "zpool create {{ zfsprep_root_pool_opts }} {{ zfsprep_root_pool }} {{ zfsprep_root_pool_type }} {{ zfsprep_target_devices | product([zfsprep_root_part_append]) | map('join') | list | join(' ') }}"
 
 - name: create boot dataset
   zfs:
