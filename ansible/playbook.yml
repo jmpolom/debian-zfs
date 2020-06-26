@@ -9,7 +9,7 @@
   gather_facts: no
   tasks:
     - name: make sure python is installed in our chroot
-      raw: "apt-get update && apt-get -y install python"
+      raw: "apt-get update && apt-get -y install python3"
 - hosts: chroot
   vars_files:
     - vars/common.yml
